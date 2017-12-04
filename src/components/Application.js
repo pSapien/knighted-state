@@ -1,53 +1,27 @@
 import React, { Component } from 'react';
-import uniqueId from 'lodash/uniqueId';
+
+import ItemStore from '../ItemStore';
 import NewItem from './NewItem';
 import Items from './Items';
 
 import './Application.css';
 
-const defaultState = [
-  { value: 'Laptop', id: uniqueId(), packed: false },
-  { value: 'Laptop Charger', id: uniqueId(), packed: false },
-  { value: 'Notebook', id: uniqueId(), packed: false },
-  { value: 'Umbrella', id: uniqueId(), packed: false },
-  { value: 'Notebook', id: uniqueId(), packed: false },
-  { value: 'Mobile', id: uniqueId(), packed: false },
-  { value: 'Mobile Data Cable', id: uniqueId(), packed: false },
-  { value: 'Earphones', id: uniqueId(), packed: false },
-  { value: 'Bluetooth earphones', id: uniqueId(), packed: false },
-  { value: 'Wireless Mouse', id: uniqueId(), packed: false },
-  { value: 'Spectacles', id: uniqueId(), packed: false }
-];
-
 class Application extends Component {
   state = {
-    items: defaultState
+    items: ItemStore.getItems()
   };
 
-  addItem = item => {
-    this.setState({
-      items: [item, ...this.state.items]
-    });
+  updateItems = () => {
+    this.setState({ items: ItemStore.getItems() });
   };
 
-  removeItem = itemToBeRemoved => {
-    this.setState({ items: this.state.items.filter(item => item.id !== itemToBeRemoved.id) });
-  };
+  componentDidMount() {
+    ItemStore.on('change', this.updateItems);
+  }
 
-  toggleItem = itemToBeToggled => {
-    const items = this.state.items.map(item => {
-      if (item.id !== itemToBeToggled.id) return item;
-      return { ...itemToBeToggled, packed: !itemToBeToggled.packed };
-    });
-    this.setState({ items });
-  };
-
-  markAllAsUnpacked = () => {
-    const items = this.state.items.map(item => {
-      return { ...item, packed: false };
-    });
-    this.setState({ items });
-  };
+  componentWillUnmount() {
+    ItemStore.off('change', this.updateItems);
+  }
 
   render() {
     const { items } = this.state;
@@ -56,20 +30,9 @@ class Application extends Component {
 
     return (
       <div className="Application">
-        <NewItem addItem={this.addItem} />
-
-        <Items
-          title="Unpacked Items"
-          items={unpackedItems}
-          removeItem={this.removeItem}
-          toggleItem={this.toggleItem}
-        />
-        <Items
-          title="Packed Items"
-          items={packedItems}
-          removeItem={this.removeItem}
-          toggleItem={this.toggleItem}
-        />
+        <NewItem />
+        <Items title="Unpacked Items" items={unpackedItems} />
+        <Items title="Packed Items" items={packedItems} />
         <button className="button full-width" onClick={this.markAllAsUnpacked}>
           Mark All As Unpacked
         </button>
